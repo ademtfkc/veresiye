@@ -1,0 +1,39 @@
+/**
+ * Cabinet Grotesk — YEREL FONT DOSYASI HENÜZ EKLENMEDİ.
+ *
+ * Tasarımdaki (tasarim/Perde Takip.dc.html) başlık fontu Cabinet Grotesk,
+ * npm üzerinde resmi bir paket olarak dağıtılmıyor (Fontshare/ticari lisans —
+ * doğrulandı: `npm view cabinet-grotesk` → 404). Offline şartı gereği CDN'den
+ * çekilemez (dokumanlar/MIMARI.md Böl.4/Böl.9).
+ *
+ * ⚠️ NOT: Bu yüzden .woff2 dosyaları temin edilip
+ * `src/renderer/stil/fonts/cabinet-grotesk/` klasörüne konana kadar,
+ * global.css'teki font-family zinciri ("Cabinet Grotesk, IBM Plex Sans, ...")
+ * otomatik olarak IBM Plex Sans'a düşer. Uygulama bu haliyle de tamamen
+ * offline çalışır — sadece başlık fontu geçici olarak IBM Plex Sans olur.
+ *
+ * Dosyalar temin edilince aşağıdaki @font-face kurallarının başındaki/
+ * sonundaki yorum işaretlerini kaldırın:
+ *
+ * @font-face {
+ *   font-family: 'Cabinet Grotesk';
+ *   src: url('./cabinet-grotesk/CabinetGrotesk-Medium.woff2') format('woff2');
+ *   font-weight: 500;
+ *   font-style: normal;
+ *   font-display: swap;
+ * }
+ * @font-face {
+ *   font-family: 'Cabinet Grotesk';
+ *   src: url('./cabinet-grotesk/CabinetGrotesk-Bold.woff2') format('woff2');
+ *   font-weight: 700;
+ *   font-style: normal;
+ *   font-display: swap;
+ * }
+ * @font-face {
+ *   font-family: 'Cabinet Grotesk';
+ *   src: url('./cabinet-grotesk/CabinetGrotesk-Extrabold.woff2') format('woff2');
+ *   font-weight: 800;
+ *   font-style: normal;
+ *   font-display: swap;
+ * }
+ */

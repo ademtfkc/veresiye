@@ -1,0 +1,134 @@
+/**
+ * Genel temel stiller (taban tipografi, kutu modeli).
+ * Ekrana özel stiller ekranlar/bilesenler kendi dosyalarında tutar; burada
+ * sadece tüm uygulamaya yayılan temel kurallar bulunur.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: var(--base-fs);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Cabinet Grotesk', 'IBM Plex Sans', sans-serif;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.mono {
+  font-family: 'IBM Plex Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Klavye ile gezinen kullanıcı için görünür odak halkası (erişilebilirlik) */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Toast (bilesenler/Toast.tsx) ve Modal/OnayKutusu (bilesenler/Modal.tsx) animasyonları — tasarim/Perde Takip.dc.html ile birebir. */
+@keyframes toastIn {
+  from {
+    transform: translate(-50%, -16px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 5px;
+}
+
+input::placeholder {
+  color: var(--text2);
+  opacity: 0.7;
+}
+
+/* Tıklanabilir tablo satırları (bilesenler/Tablo.tsx) — tasarim/Perde Takip.dc.html [data-row] ile birebir. */
+[data-row] {
+  cursor: pointer;
+}
+[data-row]:hover {
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+[data-row]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+/*
+ * YAZDIRMA (Faz 5 — Raporlar, Şartname Böl.7/9): A4 uyumlu, temiz çıktı.
+ * `.no-print` sol menüyü + araç çubuklarını (tarih filtresi, Yazdır/CSV/Excel
+ * düğmeleri) gizler; ekranda sadece dükkan başlığı + rapor tablosu kalır.
+ * `window.print()` bilesenler/RaporAraclari.tsx'teki "Yazdır" düğmesinden
+ * çağrılır (bkz. dokumanlar/GEREKSINIMLER.md Böl.7).
+ */
+@page {
+  size: A4;
+  margin: 14mm 12mm;
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    background: #fff;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .no-print {
+    display: none !important;
+  }
+  main {
+    flex: none !important;
+    width: 100% !important;
+  }
+  .yazdir-alani {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}
+
+

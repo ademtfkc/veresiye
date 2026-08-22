@@ -1,0 +1,21 @@
+node_modules/
+dist/
+build/
+out/
+release/
+.tmp/
+*.log
+.DS_Store
+.env
+.env.*
+# Yerel veritabanı ve yedekler asla git'e girmez (canlı müşteri verisi)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+yedekler/
+
+# Ekibin iç hafızası ve ham şartname taslağı — bilgisayarda kalır, herkese açık depoya girmez
+PROJE_DURUMU.md
+perde_satis_uygulamasi_v2.md

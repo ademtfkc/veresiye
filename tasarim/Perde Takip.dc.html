@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<!-- ÜRETİM NOTU: Fontlar (Cabinet Grotesk / IBM Plex) ve Phosphor ikonları burada
+     prototip amacıyla web'den yükleniyor. Offline/üretim sürümünde bunlar
+     @font-face + yerel dosyalar ile SELF-HOST edilmeli; hiçbir CDN bağımlılığı kalmamalı. -->
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@500,700,800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+:root{--bg:#F7F5F0;--surface:#FFFFFF;--border:#DED8CC;--text:#1C2B33;--text2:#5C6B73;--primary:#1C4E5A;--accent:#8A6A2F;--danger:#A3231B;--success:#1E6B4F;--warning:#B87503;--radius:8px;--row-h:52px;--sidebar-w:260px;--base-fs:16px;--primary-soft:color-mix(in srgb,var(--primary) 10%,transparent);--danger-soft:color-mix(in srgb,var(--danger) 9%,transparent);--success-soft:color-mix(in srgb,var(--success) 12%,transparent);--warning-soft:color-mix(in srgb,var(--warning) 15%,transparent);}
+[data-theme="dark"]{--bg:#14191C;--surface:#1C2327;--border:#2C363B;--text:#E7ECEE;--text2:#9BA8AE;--primary:#4E9DAE;--accent:#C79A4A;--danger:#E27167;--success:#54B991;--warning:#E0A83C;}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:var(--base-fs);-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{font-family:'Cabinet Grotesk','IBM Plex Sans',sans-serif;margin:0;letter-spacing:-.01em;}
+.mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+[data-nav][data-active="true"]{background:var(--primary-soft);color:var(--primary);font-weight:600;}
+[data-nav]:hover{background:color-mix(in srgb,var(--text) 6%,transparent);}
+[data-row]:hover{background:color-mix(in srgb,var(--primary) 5%,transparent);cursor:pointer;}
+input::placeholder{color:var(--text2);opacity:.7;}
+input:focus-visible,button:focus-visible{outline:2px solid var(--primary);outline-offset:1px;}
+@keyframes toastIn{from{transform:translate(-50%,-16px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px}
+</style>
+</helmet>
+<div ref="{{ rootRef }}" data-theme="{{ theme }}" style="display:flex;min-height:100vh;background:var(--bg);color:var(--text);">
+
+  <aside style="width:var(--sidebar-w);flex:none;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;">
+    <div style="padding:22px 20px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+      <div style="width:42px;height:42px;flex:none;border-radius:8px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;"><i class="ph ph-scissors" style="font-size:24px;"></i></div>
+      <div style="min-width:0;"><div style="font-family:'Cabinet Grotesk';font-weight:800;font-size:17px;line-height:1.15;">{{ dukkan }}</div><div style="font-size:12px;color:var(--text2);">Cari Hesap Defteri</div></div>
+    </div>
+    <nav style="padding:12px;display:flex;flex-direction:column;gap:4px;flex:1;">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="5">
+        <button data-nav data-active="{{ n.active }}" onClick="{{ n.onClick }}" style="display:flex;align-items:center;gap:13px;padding:12px 14px;border:none;background:transparent;color:var(--text);border-radius:6px;font-size:16px;text-align:left;width:100%;">
+          <i class="ph {{ n.icon }}" style="font-size:22px;"></i><span>{{ n.label }}</span>
+        </button>
+      </sc-for>
+    </nav>
+    <div style="padding:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;">
+      <button onClick="{{ toggleTheme }}" data-nav style="display:flex;align-items:center;gap:13px;padding:11px 14px;border:none;background:transparent;color:var(--text);border-radius:6px;font-size:15px;width:100%;text-align:left;"><i class="ph {{ themeIcon }}" style="font-size:20px;"></i><span>{{ themeLabel }}</span></button>
+      <div style="padding:12px 14px;border:1px solid var(--border);border-radius:8px;">
+        <div style="font-weight:600;font-size:15px;">{{ userName }}</div>
+        <div style="margin-top:7px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-size:12px;padding:3px 8px;border-radius:4px;background:var(--primary-soft);color:var(--primary);font-weight:600;">{{ roleLabel }}</span>
+          <button onClick="{{ toggleRole }}" style="font-size:12px;color:var(--text2);background:transparent;border:none;cursor:pointer;text-decoration:underline;">rol değiştir</button>
+        </div>
+      </div>
+      <button data-nav style="display:flex;align-items:center;gap:13px;padding:11px 14px;border:none;background:transparent;color:var(--text2);border-radius:6px;font-size:15px;width:100%;text-align:left;"><i class="ph ph-sign-out" style="font-size:20px;"></i><span>Çıkış</span></button>
+    </div>
+  </aside>
+
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;">
+
+    <sc-if value="{{ isPanel }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:28px 32px;max-width:1200px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div><h1 style="font-size:30px;">Kontrol Paneli</h1><div style="color:var(--text2);margin-top:4px;">{{ bugunStr }} · günün özeti</div></div>
+        <div style="display:flex;gap:10px;">
+          <button onClick="{{ onTahsilat }}" style="background:var(--surface);color:var(--text);border:1px solid var(--border);padding:12px 18px;border-radius:6px;font-size:16px;font-weight:600;display:inline-flex;align-items:center;gap:8px;cursor:pointer;"><i class="ph ph-hand-coins" style="font-size:20px;"></i>Tahsilat Ekle</button>
+          <button onClick="{{ onYeniSatis }}" style="background:var(--primary);color:#fff;border:none;padding:12px 18px;border-radius:6px;font-size:16px;font-weight:600;display:inline-flex;align-items:center;gap:8px;cursor:pointer;"><i class="ph ph-plus" style="font-size:20px;"></i>Yeni Satış</button>
+        </div>
+      </div>
+
+      <sc-if value="{{ backupWarn }}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top:20px;display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--warning-soft);border:1px solid var(--warning);border-radius:8px;color:var(--warning);">
+        <i class="ph ph-warning-circle" style="font-size:24px;flex:none;"></i>
+        <div style="color:var(--text);flex:1;">Uzun süredir yedek almadınız. Verilerinizin kaybolmaması için <b>USB belleğe yedek</b> almanız önerilir.</div>
+        <button onClick="{{ onYedek }}" style="background:var(--warning);color:#fff;border:none;padding:9px 15px;border-radius:6px;font-weight:600;cursor:pointer;white-space:nowrap;">Yedek Al</button>
+      </div>
+      </sc-if>
+
+      <div style="display:flex;gap:16px;margin-top:24px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:240px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px 22px;">
+          <div style="font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:8px;"><i class="ph ph-scroll" style="font-size:18px;"></i>Toplam Açık Alacak</div>
+          <div class="mono" style="font-size:36px;font-weight:600;white-space:nowrap;margin-top:12px;color:var(--danger);line-height:1;">{{ kpi.acik }}</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:8px;">{{ kpi.acikSub }}</div>
+        </div>
+        <div style="flex:1;min-width:240px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px 22px;">
+          <div style="font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:8px;"><i class="ph ph-coins" style="font-size:18px;"></i>Bu Ay Tahsil Edilen</div>
+          <div class="mono" style="font-size:36px;font-weight:600;white-space:nowrap;margin-top:12px;color:var(--success);line-height:1;">{{ kpi.buAy }}</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:8px;">{{ kpi.buAySub }}</div>
+        </div>
+        <div style="flex:1;min-width:240px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px 22px;">
+          <div style="font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:8px;"><i class="ph ph-clock-countdown" style="font-size:18px;"></i>Geciken Müşteri</div>
+          <div class="mono" style="font-size:36px;font-weight:600;white-space:nowrap;margin-top:12px;color:var(--danger);line-height:1;">{{ kpi.geciken }}</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:8px;">{{ kpi.gecikenSub }}</div>
+        </div>
+      </div>
+
+      <div style="margin-top:28px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+        <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+          <span style="width:10px;height:10px;border-radius:50%;background:var(--danger);"></span>
+          <h3 style="font-size:19px;">Kırmızı Liste</h3>
+          <span style="color:var(--text2);font-size:14px;">— 30+ gündür ödemesi olmayan borçlular</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr>
+            <th style="text-align:left;padding:12px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Ad Soyad</th>
+            <th style="text-align:left;padding:12px 16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Telefon</th>
+            <th style="text-align:right;padding:12px 16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Kalan Bakiye</th>
+            <th style="text-align:left;padding:12px 16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Son Ödeme</th>
+            <th style="text-align:right;padding:12px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Gecikme</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ kirmizi }}" as="r" hint-placeholder-count="5">
+              <tr data-row onClick="{{ r.onClick }}">
+                <td style="padding:0 22px;height:var(--row-h);border-bottom:1px solid var(--border);font-weight:500;">{{ r.ad }}</td>
+                <td class="mono" style="padding:0 16px;height:var(--row-h);border-bottom:1px solid var(--border);color:var(--text2);">{{ r.tel }}</td>
+                <td class="mono" style="padding:0 16px;height:var(--row-h);border-bottom:1px solid var(--border);text-align:right;font-weight:600;color:var(--danger);">{{ r.balanceStr }}</td>
+                <td class="mono" style="padding:0 16px;height:var(--row-h);border-bottom:1px solid var(--border);color:var(--text2);">{{ r.lastPayStr }}</td>
+                <td style="padding:0 22px;height:var(--row-h);border-bottom:1px solid var(--border);text-align:right;"><span class="mono" style="font-weight:600;color:var(--danger);">{{ r.gecikmeStr }}</span></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isMusteriler }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:28px 32px;max-width:1150px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+        <h1 style="font-size:30px;">Müşteriler</h1>
+        <button onClick="{{ onYeniMusteri }}" style="background:var(--primary);color:#fff;border:none;padding:12px 18px;border-radius:6px;font-size:16px;font-weight:600;display:inline-flex;align-items:center;gap:8px;cursor:pointer;"><i class="ph ph-user-plus" style="font-size:20px;"></i>Yeni Müşteri</button>
+      </div>
+      <div style="position:relative;margin-top:20px;">
+        <i class="ph ph-magnifying-glass" style="position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:22px;color:var(--text2);"></i>
+        <input value="{{ search }}" onInput="{{ onSearch }}" placeholder="Ad Soyad veya telefon ile ara…" style="width:100%;padding:17px 18px 17px 52px;font-size:19px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);"/>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <sc-for list="{{ chips }}" as="c" hint-placeholder-count="3">
+          <button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }} <span style="opacity:.7;">({{ c.count }})</span></button>
+        </sc-for>
+      </div>
+      <div style="margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr>
+            <th style="text-align:left;padding:12px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Ad Soyad</th>
+            <th style="text-align:left;padding:12px 16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Telefon</th>
+            <th style="text-align:left;padding:12px 16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Durum</th>
+            <th onClick="{{ onSortBakiye }}" style="text-align:right;padding:12px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);cursor:pointer;user-select:none;">Kalan Bakiye <span style="color:var(--primary);">{{ sortArrow }}</span></th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ mFiltered }}" as="r" hint-placeholder-count="8">
+              <tr data-row onClick="{{ r.onClick }}">
+                <td style="padding:0 22px;height:var(--row-h);border-bottom:1px solid var(--border);font-weight:500;">{{ r.ad }}</td>
+                <td class="mono" style="padding:0 16px;height:var(--row-h);border-bottom:1px solid var(--border);color:var(--text2);">{{ r.tel }}</td>
+                <td style="padding:0 16px;height:var(--row-h);border-bottom:1px solid var(--border);"><span style="{{ r.badgeStyle }}">{{ r.slabel }}</span></td>
+                <td class="mono" style="padding:0 22px;height:var(--row-h);border-bottom:1px solid var(--border);text-align:right;font-weight:600;color:{{ r.balCol }};">{{ r.balanceStr }}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+        <sc-if value="{{ mEmpty }}"><div style="padding:48px;text-align:center;color:var(--text2);font-size:17px;">Aramanıza uygun müşteri bulunamadı.</div></sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isKart }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:24px 32px;max-width:1150px;">
+      <button onClick="{{ onBack }}" style="background:transparent;border:none;color:var(--text2);font-size:15px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:4px 0;"><i class="ph ph-arrow-left" style="font-size:18px;"></i>Müşteriler</button>
+      <div style="margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px 26px;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+        <div>
+          <h1 style="font-size:28px;">{{ card.ad }}</h1>
+          <div class="mono" style="color:var(--text2);margin-top:6px;font-size:17px;">{{ card.tel }}</div>
+          <div style="margin-top:12px;"><span style="{{ card.badgeStyle }}">{{ card.slabel }}</span></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;">Toplam Kalan Bakiye</div>
+          <div class="mono" style="font-size:56px;font-weight:600;line-height:1;margin-top:6px;color:{{ card.balCol }};">{{ card.balanceStr }}</div>
+          <sc-if value="{{ card.isEksi }}"><div style="color:var(--warning);font-size:14px;margin-top:6px;font-weight:600;">⚠ Fazla ödeme — müşteri alacaklı</div></sc-if>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+        <button onClick="{{ card.onSatis }}" style="background:var(--primary);color:#fff;border:none;padding:11px 16px;border-radius:6px;font-size:15px;font-weight:600;display:inline-flex;align-items:center;gap:7px;cursor:pointer;"><i class="ph ph-plus" style="font-size:19px;"></i>Yeni Satış</button>
+        <button onClick="{{ card.onTahsilat }}" style="background:var(--surface);color:var(--text);border:1px solid var(--border);padding:11px 16px;border-radius:6px;font-size:15px;font-weight:600;display:inline-flex;align-items:center;gap:7px;cursor:pointer;"><i class="ph ph-hand-coins" style="font-size:19px;"></i>Tahsilat Ekle</button>
+        <button onClick="{{ card.onEkstre }}" style="background:var(--surface);color:var(--text);border:1px solid var(--border);padding:11px 16px;border-radius:6px;font-size:15px;font-weight:600;display:inline-flex;align-items:center;gap:7px;cursor:pointer;"><i class="ph ph-printer" style="font-size:19px;"></i>Ekstre Yazdır</button>
+        <sc-if value="{{ isSahip }}">
+          <div style="flex:1;"></div>
+          <button onClick="{{ card.onDelete }}" style="background:transparent;color:var(--danger);border:1px solid var(--border);padding:11px 16px;border-radius:6px;font-size:15px;font-weight:600;display:inline-flex;align-items:center;gap:7px;cursor:pointer;"><i class="ph ph-trash" style="font-size:19px;"></i>Müşteriyi Sil</button>
+        </sc-if>
+      </div>
+
+      <div style="margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+        <div style="padding:16px 22px;border-bottom:1px solid var(--border);"><h3 style="font-size:18px;">Satışlar & Hesap Hareketleri</h3></div>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr>
+            <th style="text-align:left;padding:11px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Tarih</th>
+            <th style="text-align:left;padding:11px 16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Açıklama</th>
+            <th style="text-align:right;padding:11px 16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Toplam</th>
+            <th style="text-align:right;padding:11px 16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Ödenen</th>
+            <th style="text-align:right;padding:11px 16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Kalan</th>
+            <th style="text-align:right;padding:11px 22px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);border-bottom:2px solid var(--border);">Durum</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ card.sales }}" as="s" hint-placeholder-count="3">
+              <tr data-row onClick="{{ s.onToggle }}">
+                <td class="mono" style="padding:0 22px;height:var(--row-h);border-bottom:1px solid var(--border);color:var(--text2);white-space:nowrap;">{{ s.tarihStr }}</td>
+                <td style="padding:0 16px;height:var(--row-h);border-bottom:1px solid var(--border);"><i class="ph {{ s.caret }}" style="font-size:14px;color:var(--text2);margin-right:8px;"></i>{{ s.aciklama }}<sc-if value="{{ s.devir }}"><span style="margin-left:8px;font-size:11px;padding:2px 7px;border-radius:3px;background:var(--warning-soft);color:var(--warning);font-weight:600;">Devir · eski defter</span></sc-if></td>
+                <td class="mono" style="padding:0 16px;height:var(--row-h);border-bottom:1px solid var(--border);text-align:right;">{{ s.toplamStr }}</td>
+                <td class="mono" style="padding:0 16px;height:var(--row-h);border-bottom:1px solid var(--border);text-align:right;color:var(--success);">{{ s.odenenStr }}</td>
+                <td class="mono" style="padding:0 16px;height:var(--row-h);border-bottom:1px solid var(--border);text-align:right;font-weight:600;color:{{ s.dcol }};">{{ s.kalanStr }}</td>
+                <td style="padding:0 22px;height:var(--row-h);border-bottom:1px solid var(--border);text-align:right;"><span style="font-size:13px;color:{{ s.dcol }};font-weight:600;">{{ s.durum }}</span></td>
+              </tr>
+              <sc-if value="{{ s.expanded }}">
+              <tr><td colspan="6" style="padding:0;border-bottom:1px solid var(--border);background:var(--bg);">
+                <div style="padding:18px 22px;display:flex;flex-direction:column;gap:18px;">
+                  <sc-if value="{{ s.hasItems }}">
+                  <div>
+                    <div style="font-weight:600;font-size:14px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em;">Perde Kalemleri (Ölçü)</div>
+                    <table style="width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+                      <thead><tr style="background:var(--bg);">
+                        <th style="text-align:left;padding:9px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">Oda</th>
+                        <th style="text-align:left;padding:9px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">Model / Kumaş</th>
+                        <th style="text-align:right;padding:9px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">En</th>
+                        <th style="text-align:right;padding:9px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">Boy</th>
+                        <th style="text-align:right;padding:9px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">Adet</th>
+                        <th style="text-align:right;padding:9px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">Birim Fiyat</th>
+                        <th style="text-align:right;padding:9px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">Tutar</th>
+                      </tr></thead>
+                      <tbody>
+                        <sc-for list="{{ s.items }}" as="it" hint-placeholder-count="2">
+                        <tr>
+                          <td style="padding:9px 14px;border-bottom:1px solid var(--border);">{{ it.oda }}</td>
+                          <td style="padding:9px 14px;border-bottom:1px solid var(--border);">{{ it.model }}</td>
+                          <td class="mono" style="padding:9px 14px;border-bottom:1px solid var(--border);text-align:right;color:var(--text2);">{{ it.enStr }}</td>
+                          <td class="mono" style="padding:9px 14px;border-bottom:1px solid var(--border);text-align:right;color:var(--text2);">{{ it.boyStr }}</td>
+                          <td class="mono" style="padding:9px 14px;border-bottom:1px solid var(--border);text-align:right;">{{ it.adet }}</td>
+                          <td class="mono" style="padding:9px 14px;border-bottom:1px solid var(--border);text-align:right;">{{ it.birimStr }}</td>
+                          <td class="mono" style="padding:9px 14px;border-bottom:1px solid var(--border);text-align:right;font-weight:600;">{{ it.tutarStr }}</td>
+                        </tr>
+                        </sc-for>
+                      </tbody>
+                    </table>
+                  </div>
+                  </sc-if>
+                  <div>
+                    <div style="font-weight:600;font-size:14px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em;">Tahsilat Geçmişi</div>
+                    <sc-if value="{{ s.hasPayments }}">
+                    <table style="width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+                      <thead><tr style="background:var(--bg);">
+                        <th style="text-align:left;padding:9px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">Tarih</th>
+                        <th style="text-align:right;padding:9px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">Tutar</th>
+                        <th style="text-align:left;padding:9px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">Ödeme Şekli</th>
+                        <th style="text-align:left;padding:9px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">Not</th>
+                      </tr></thead>
+                      <tbody>
+                        <sc-for list="{{ s.payments }}" as="p" hint-placeholder-count="2">
+                        <tr>
+                          <td class="mono" style="padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text2);">{{ p.tarihStr }}</td>
+                          <td class="mono" style="padding:9px 14px;border-bottom:1px solid var(--border);text-align:right;font-weight:600;color:var(--success);">{{ p.tutarStr }}</td>
+                          <td style="padding:9px 14px;border-bottom:1px solid var(--border);">{{ p.sekilStr }}</td>
+                          <td style="padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text2);">{{ p.notStr }}</td>
+                        </tr>
+                        </sc-for>
+                      </tbody>
+                    </table>
+                    </sc-if>
+                    <sc-if value="{{ s.noPayments }}"><div style="color:var(--text2);font-size:14px;padding:4px 0;">Bu satış için henüz tahsilat girilmemiş.</div></sc-if>
+                  </div>
+                  <sc-if value="{{ isSahip }}">
+                  <div style="display:flex;gap:8px;">
+                    <button onClick="{{ s.onEdit }}" style="background:var(--surface);color:var(--text);border:1px solid var(--border);padding:8px 14px;border-radius:6px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-pencil-simple" style="font-size:16px;"></i>Düzenle</button>
+                    <button onClick="{{ s.onDelete }}" style="background:transparent;color:var(--danger);border:1px solid var(--border);padding:8px 14px;border-radius:6px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-trash" style="font-size:16px;"></i>Satışı Sil</button>
+                  </div>
+                  </sc-if>
+                </div>
+              </td></tr>
+              </sc-if>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isYeniSatis }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:28px 32px;max-width:1050px;">
+      <h1 style="font-size:30px;">Yeni Satış</h1>
+      <div style="margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px 24px;display:flex;flex-direction:column;gap:20px;">
+        <sc-if value="{{ satis.hasCust }}">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg);">
+            <div><div style="font-size:13px;color:var(--text2);">Müşteri</div><div style="font-size:19px;font-weight:600;">{{ satis.custName }}</div></div>
+            <button onClick="{{ satis.onChange }}" style="background:transparent;border:1px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:6px;cursor:pointer;">Değiştir</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ satis.noCust }}">
+          <div>
+            <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">Müşteri Seç</label>
+            <div style="position:relative;">
+              <i class="ph ph-magnifying-glass" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--text2);"></i>
+              <input value="{{ satis.query }}" onInput="{{ satis.onQuery }}" placeholder="Müşteri ara ya da yeni ad yaz…" style="width:100%;padding:14px 16px 14px 46px;font-size:17px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);"/>
+            </div>
+            <sc-if value="{{ satis.hasResults }}">
+            <div style="margin-top:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+              <sc-for list="{{ satis.results }}" as="r" hint-placeholder-count="3">
+                <div data-row onClick="{{ r.onPick }}" style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-weight:500;">{{ r.ad }}</span><span class="mono" style="color:var(--text2);">{{ r.tel }}</span></div>
+              </sc-for>
+            </div>
+            </sc-if>
+            <sc-if value="{{ satis.showCreate }}">
+            <button onClick="{{ satis.onCreate }}" style="margin-top:8px;background:var(--primary-soft);color:var(--primary);border:1px dashed var(--primary);padding:12px 16px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;width:100%;text-align:left;"><i class="ph ph-user-plus" style="font-size:18px;margin-right:8px;"></i>“{{ satis.query }}” adıyla yeni müşteri oluştur</button>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <div>
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">Açıklama</label>
+          <input value="{{ satis.desc }}" onInput="{{ satis.onDesc }}" placeholder="Örn. Salon perdesi + tül" style="width:100%;padding:14px 16px;font-size:17px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);"/>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">Perde Kalemleri</label>
+          <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead><tr style="background:var(--bg);">
+                <th style="text-align:left;padding:10px 12px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">Oda</th>
+                <th style="text-align:left;padding:10px 12px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);">Model / Kumaş</th>
+                <th style="text-align:right;padding:10px 12px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);width:70px;">En cm</th>
+                <th style="text-align:right;padding:10px 12px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);width:70px;">Boy cm</th>
+                <th style="text-align:right;padding:10px 12px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);width:60px;">Adet</th>
+                <th style="text-align:right;padding:10px 12px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);width:110px;">Birim Fiyat</th>
+                <th style="text-align:right;padding:10px 12px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);width:120px;">Tutar</th>
+                <th style="border-bottom:1px solid var(--border);width:40px;"></th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ satis.items }}" as="it" hint-placeholder-count="1">
+                <tr>
+                  <td style="padding:6px 8px;border-bottom:1px solid var(--border);"><input value="{{ it.oda }}" onInput="{{ it.onOda }}" placeholder="Salon" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);font-size:15px;"/></td>
+                  <td style="padding:6px 8px;border-bottom:1px solid var(--border);"><input value="{{ it.model }}" onInput="{{ it.onModel }}" placeholder="Kadife blackout" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);font-size:15px;"/></td>
+                  <td style="padding:6px 8px;border-bottom:1px solid var(--border);"><input value="{{ it.en }}" onInput="{{ it.onEn }}" inputmode="numeric" class="mono" style="width:100%;padding:9px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);font-size:15px;text-align:right;"/></td>
+                  <td style="padding:6px 8px;border-bottom:1px solid var(--border);"><input value="{{ it.boy }}" onInput="{{ it.onBoy }}" inputmode="numeric" class="mono" style="width:100%;padding:9px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);font-size:15px;text-align:right;"/></td>
+                  <td style="padding:6px 8px;border-bottom:1px solid var(--border);"><input value="{{ it.adet }}" onInput="{{ it.onAdet }}" inputmode="numeric" class="mono" style="width:100%;padding:9px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);font-size:15px;text-align:right;"/></td>
+                  <td style="padding:6px 8px;border-bottom:1px solid var(--border);"><input value="{{ it.birim }}" onInput="{{ it.onBirim }}" inputmode="numeric" class="mono" placeholder="0" style="width:100%;padding:9px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);font-size:15px;text-align:right;"/></td>
+                  <td class="mono" style="padding:6px 12px;border-bottom:1px solid var(--border);text-align:right;font-weight:600;">{{ it.tutarStr }}</td>
+                  <td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:center;"><button onClick="{{ it.onRemove }}" style="background:transparent;border:none;color:var(--text2);cursor:pointer;font-size:18px;line-height:1;"><i class="ph ph-x"></i></button></td>
+                </tr>
+                </sc-for>
+              </tbody>
+            </table>
+            <button onClick="{{ satis.onAdd }}" style="width:100%;padding:12px;background:var(--bg);border:none;border-top:1px solid var(--border);color:var(--primary);font-size:15px;font-weight:600;cursor:pointer;"><i class="ph ph-plus" style="font-size:16px;margin-right:6px;"></i>Kalem Ekle</button>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;background:var(--primary-soft);border-radius:8px;flex-wrap:wrap;">
+          <div style="font-size:15px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Satış Toplamı</div>
+          <div class="mono" style="font-size:48px;font-weight:600;color:var(--primary);line-height:1;">{{ satis.totalStr }}</div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button onClick="{{ satis.onCancel }}" style="background:transparent;border:1px solid var(--border);color:var(--text2);padding:13px 22px;border-radius:6px;font-size:16px;cursor:pointer;">Vazgeç</button>
+          <button onClick="{{ satis.onSave }}" style="background:var(--primary);color:#fff;border:none;padding:13px 26px;border-radius:6px;font-size:16px;font-weight:600;cursor:pointer;">Satışı Kaydet</button>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isTahsilat }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:28px 32px;max-width:820px;">
+      <h1 style="font-size:30px;">Tahsilat Ekle</h1>
+
+      <sc-if value="{{ t.noCust }}">
+      <div style="margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;">
+        <label style="display:block;font-size:15px;font-weight:600;margin-bottom:10px;">Hangi müşteriden tahsilat alıyorsunuz?</label>
+        <div style="position:relative;">
+          <i class="ph ph-magnifying-glass" style="position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:22px;color:var(--text2);"></i>
+          <input value="{{ t.query }}" onInput="{{ t.onQuery }}" placeholder="Ad Soyad veya telefon ile ara…" style="width:100%;padding:17px 18px 17px 52px;font-size:19px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);"/>
+        </div>
+        <sc-if value="{{ t.hasResults }}">
+        <div style="margin-top:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+          <sc-for list="{{ t.results }}" as="r" hint-placeholder-count="4">
+            <div data-row onClick="{{ r.onPick }}" style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div><div style="font-weight:600;font-size:17px;">{{ r.ad }}</div><div class="mono" style="color:var(--text2);font-size:14px;">{{ r.tel }}</div></div>
+              <div class="mono" style="text-align:right;font-weight:600;color:{{ r.balCol }};">{{ r.balanceStr }}</div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ t.hasCust }}">
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:16px;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <div style="font-size:13px;color:var(--text2);">Müşteri</div>
+            <div style="font-size:22px;font-weight:600;">{{ t.custName }}</div>
+            <div class="mono" style="color:var(--text2);font-size:14px;">{{ t.custTel }}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;">Güncel Bakiye</div>
+            <div class="mono" style="font-size:30px;font-weight:600;color:{{ t.custBalCol }};line-height:1.1;">{{ t.custBalStr }}</div>
+            <button onClick="{{ t.onChange }}" style="background:transparent;border:none;color:var(--text2);text-decoration:underline;font-size:13px;cursor:pointer;margin-top:4px;">müşteri değiştir</button>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px 22px;">
+          <div style="font-size:15px;font-weight:600;margin-bottom:12px;">Hangi satışa/hesaba ödeme yapılıyor?</div>
+          <sc-if value="{{ t.hasOpen }}">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <sc-for list="{{ t.openSales }}" as="s" hint-placeholder-count="2">
+              <div onClick="{{ s.onPick }}" style="{{ s.rowStyle }}">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <i class="ph {{ s.radio }}" style="font-size:22px;color:{{ s.radioCol }};"></i>
+                  <div><div style="font-weight:500;">{{ s.aciklama }}</div><div class="mono" style="font-size:13px;color:var(--text2);">{{ s.tarihStr }}</div></div>
+                </div>
+                <div class="mono" style="text-align:right;font-weight:600;color:var(--danger);">{{ s.kalanStr }}</div>
+              </div>
+            </sc-for>
+          </div>
+          </sc-if>
+          <sc-if value="{{ t.noOpen }}"><div style="color:var(--text2);padding:8px 0;">Bu müşterinin açık hesabı yok — tüm satışları kapanmış görünüyor.</div></sc-if>
+        </div>
+
+        <sc-if value="{{ t.saleSelected }}">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px;display:flex;flex-direction:column;gap:18px;">
+          <div>
+            <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">Tahsil Edilen Tutar</label>
+            <div style="position:relative;">
+              <input value="{{ t.amount }}" onInput="{{ t.onAmount }}" onKeyDown="{{ t.onKey }}" inputmode="decimal" placeholder="0,00" class="mono" style="width:100%;padding:18px 46px 18px 18px;font-size:32px;font-weight:600;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);text-align:right;"/>
+              <span class="mono" style="position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:26px;color:var(--text2);">₺</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:180px;">
+              <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">Tarih</label>
+              <input value="{{ t.date }}" onInput="{{ t.onDate }}" type="date" class="mono" style="width:100%;padding:13px 16px;font-size:16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);"/>
+            </div>
+            <div style="flex:1;min-width:180px;">
+              <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">Ödeme Şekli</label>
+              <div style="display:flex;gap:8px;">
+                <sc-for list="{{ t.methods }}" as="m" hint-placeholder-count="3">
+                  <button onClick="{{ m.onPick }}" style="{{ m.style }}">{{ m.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">Not (isteğe bağlı)</label>
+            <input value="{{ t.note }}" onInput="{{ t.onNote }}" placeholder="Örn. ay sonu bakiye kapatıldı" style="width:100%;padding:13px 16px;font-size:16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);"/>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button onClick="{{ t.onChange }}" style="background:transparent;border:1px solid var(--border);color:var(--text2);padding:14px 22px;border-radius:6px;font-size:16px;cursor:pointer;">Vazgeç</button>
+            <button onClick="{{ t.onSave }}" style="background:var(--success);color:#fff;border:none;padding:14px 30px;border-radius:6px;font-size:17px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;"><i class="ph ph-check" style="font-size:20px;"></i>Tahsilatı Kaydet</button>
+          </div>
+        </div>
+        </sc-if>
+      </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isRaporlar }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:28px 32px;max-width:1000px;">
+      <h1 style="font-size:30px;">Raporlar</h1>
+      <div style="margin-top:16px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 20px;">
+        <div><label style="display:block;font-size:13px;color:var(--text2);margin-bottom:6px;">Başlangıç</label><input type="date" value="2026-07-01" class="mono" style="padding:11px 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);"/></div>
+        <div><label style="display:block;font-size:13px;color:var(--text2);margin-bottom:6px;">Bitiş</label><input type="date" value="2026-07-15" class="mono" style="padding:11px 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);"/></div>
+      </div>
+      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <sc-for list="{{ raporlar }}" as="r" hint-placeholder-count="4">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px;">
+          <div style="display:flex;align-items:center;gap:10px;"><i class="ph {{ r.icon }}" style="font-size:24px;color:var(--primary);"></i><h3 style="font-size:19px;">{{ r.ad }}</h3></div>
+          <div style="color:var(--text2);margin-top:8px;font-size:15px;">{{ r.desc }}</div>
+          <div style="display:flex;gap:8px;margin-top:16px;">
+            <button onClick="{{ r.onPrint }}" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:9px 15px;border-radius:6px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-printer" style="font-size:16px;"></i>Yazdır</button>
+            <button onClick="{{ r.onExcel }}" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:9px 15px;border-radius:6px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-file-xls" style="font-size:16px;"></i>Excel'e Aktar</button>
+          </div>
+        </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isAyarlar }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:28px 32px;max-width:760px;">
+      <h1 style="font-size:30px;">Ayarlar</h1>
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:16px;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px;">
+          <h3 style="font-size:18px;">Dükkan Adı</h3>
+          <input value="{{ dukkan }}" onInput="{{ onDukkan }}" style="margin-top:12px;width:100%;padding:13px 16px;font-size:17px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);"/>
+          <div style="font-size:13px;color:var(--text2);margin-top:8px;">Ekstre ve yazdırma çıktılarının başlığında görünür.</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px;">
+          <h3 style="font-size:18px;">Yetki (Rol)</h3>
+          <div style="font-size:14px;color:var(--text2);margin-top:6px;">Çalışan rolünde Düzenle/Sil butonları hiç görünmez. Şu an: <b style="color:var(--text);">{{ roleLabel }}</b></div>
+          <div style="display:flex;gap:8px;margin-top:14px;">
+            <button onClick="{{ onSetSahip }}" style="{{ roleSahipStyle }}">Dükkan Sahibi</button>
+            <button onClick="{{ onSetCalisan }}" style="{{ roleCalisanStyle }}">Çalışan</button>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px;">
+          <h3 style="font-size:18px;">Görünüm</h3>
+          <div style="display:flex;gap:8px;margin-top:14px;">
+            <button onClick="{{ onLight }}" style="{{ lightStyle }}"><i class="ph ph-sun" style="font-size:18px;margin-right:6px;"></i>Açık</button>
+            <button onClick="{{ onDark }}" style="{{ darkStyle }}"><i class="ph ph-moon" style="font-size:18px;margin-right:6px;"></i>Koyu</button>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px;">
+          <h3 style="font-size:18px;">Yedekleme</h3>
+          <div style="font-size:14px;color:var(--text2);margin-top:6px;">Son yedek: <b class="mono" style="color:var(--warning);">{{ sonYedek }}</b></div>
+          <div style="display:flex;gap:8px;margin-top:14px;">
+            <button onClick="{{ onYedek }}" style="background:var(--primary);color:#fff;border:none;padding:11px 18px;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;">Yedek Al</button>
+            <button onClick="{{ onGeriYukle }}" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:11px 18px;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;">Yedekten Geri Yükle</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+  </main>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="">
+  <div style="position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:60;background:var(--success);color:#fff;padding:15px 24px;border-radius:8px;font-size:17px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.22);animation:toastIn .25s ease;display:flex;align-items:center;gap:11px;max-width:90vw;">
+    <i class="ph ph-check-circle" style="font-size:24px;flex:none;"></i><span>{{ toast }}</span>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ confirm }}" hint-placeholder-val="">
+  <div style="position:fixed;inset:0;z-index:70;background:rgba(20,25,28,.5);display:flex;align-items:center;justify-content:center;animation:fadeIn .15s ease;padding:20px;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:26px;max-width:420px;width:100%;">
+      <div style="display:flex;align-items:center;gap:12px;"><i class="ph ph-warning" style="font-size:28px;color:var(--danger);"></i><h3 style="font-size:20px;">Emin misiniz?</h3></div>
+      <div style="margin-top:12px;color:var(--text2);font-size:16px;">{{ confirm.msg }}</div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:22px;">
+        <button onClick="{{ onConfirmNo }}" style="background:transparent;border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:6px;font-size:16px;cursor:pointer;">Vazgeç</button>
+        <button onClick="{{ onConfirmYes }}" style="background:var(--danger);color:#fff;border:none;padding:12px 22px;border-radius:6px;font-size:16px;font-weight:600;cursor:pointer;">Sil</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ pesinat }}" hint-placeholder-val="">
+  <div style="position:fixed;inset:0;z-index:70;background:rgba(20,25,28,.5);display:flex;align-items:center;justify-content:center;animation:fadeIn .15s ease;padding:20px;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:28px;max-width:440px;width:100%;text-align:center;">
+      <i class="ph ph-hand-coins" style="font-size:44px;color:var(--primary);"></i>
+      <h3 style="font-size:22px;margin-top:12px;">Peşinat aldınız mı?</h3>
+      <div style="margin-top:8px;color:var(--text2);font-size:16px;">Satış kaydedildi. Toplam tutar <b class="mono" style="color:var(--text);">{{ pesinat.toplamStr }}</b>. Peşinat aldıysanız ilk tahsilatı hemen girebilirsiniz.</div>
+      <div style="display:flex;gap:10px;margin-top:24px;">
+        <button onClick="{{ onPesinatNo }}" style="flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:14px;border-radius:6px;font-size:16px;font-weight:600;cursor:pointer;">Hayır, sonra</button>
+        <button onClick="{{ onPesinatYes }}" style="flex:1;background:var(--primary);color:#fff;border:none;padding:14px;border-radius:6px;font-size:16px;font-weight:600;cursor:pointer;">Evet, tahsilat gir</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:880},&quot;primary&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:[&quot;#1C4E5A&quot;,&quot;#2A5F52&quot;,&quot;#3A4A6B&quot;,&quot;#5C4A2F&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Renkler&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:[&quot;#8A6A2F&quot;,&quot;#9C5B2F&quot;,&quot;#4E7A5A&quot;,&quot;#6B5A8A&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Renkler&quot;},&quot;baseFontSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:16,&quot;min&quot;:14,&quot;max&quot;:20,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Yerleşim&quot;},&quot;rowHeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:52,&quot;min&quot;:44,&quot;max&quot;:64,&quot;step&quot;:2,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Yerleşim&quot;},&quot;sidebarWidth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:260,&quot;min&quot;:220,&quot;max&quot;:320,&quot;step&quot;:10,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Yerleşim&quot;}}">
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.rootRef = React.createRef();
+    this.TODAY = new Date(2026,6,15);
+    this.state = {
+      screen:'panel', role:'sahip', theme:'light',
+      dukkan:'Işık Perde & Dekorasyon',
+      customers:this.seed(),
+      search:'', filter:'hepsi', sortDir:'desc',
+      expandedSaleId:null, selId:null,
+      toast:null, confirm:null, pesinat:null, sonYedek:'02.04.2026',
+      satis:{custId:null,custQuery:'',desc:'',items:[this.newItem()]},
+      t:{custId:null,query:'',saleId:null,amount:'',date:this.iso(this.TODAY),method:'nakit',note:''}
+    };
+  }
+  componentDidMount(){ this.applyTweaks(); }
+  componentDidUpdate(){ this.applyTweaks(); }
+  applyTweaks(){
+    const r=this.rootRef.current, p=this.props||{}; if(!r) return;
+    if(typeof p.primary==='string') r.style.setProperty('--primary',p.primary);
+    if(typeof p.accent==='string') r.style.setProperty('--accent',p.accent);
+    if(p.baseFontSize) r.style.setProperty('--base-fs',p.baseFontSize+'px');
+    if(p.rowHeight) r.style.setProperty('--row-h',p.rowHeight+'px');
+    if(p.sidebarWidth) r.style.setProperty('--sidebar-w',p.sidebarWidth+'px');
+  }
+  newItem(){ return {oda:'',model:'',en:'',boy:'',adet:'1',birim:''}; }
+  iso(d){ return d.toISOString().slice(0,10); }
+  before(n){ return this.iso(new Date(this.TODAY.getTime()-n*86400000)); }
+  parseNum(v){ if(typeof v==='number')return v; let s=String(v||'').replace(/\./g,'').replace(',','.').replace(/[^0-9.\-]/g,''); const n=parseFloat(s); return isNaN(n)?0:n; }
+  fmtMoney(n){ const neg=n<-0.005; const v=Math.abs(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); return (neg?'−':'')+v+' ₺'; }
+  fmtDate(s){ if(!s)return '—'; const [y,m,d]=s.split('-'); return d+'.'+m+'.'+y; }
+  daysAgo(s){ return Math.floor((this.TODAY-new Date(s))/86400000); }
+  isThisMonth(s){ return s && s.slice(0,7)==='2026-07'; }
+  methodLabel(m){ return {nakit:'Nakit',kart:'Kart',havale:'Havale'}[m]||m; }
+
+  seed(){
+    const it=(oda,model,en,boy,adet,birim)=>({oda,model,en,boy,adet,birim});
+    let sc=0;
+    const R=(tarih,aciklama,items,payments)=>({id:'s'+(++sc),tarih,aciklama,items,payments:payments||[],devir:false,toplam:items.reduce((a,x)=>a+x.adet*x.birim,0)});
+    const D=(tarih,toplam,payments)=>({id:'s'+(++sc),tarih,aciklama:'Devir (eski defter)',items:[],payments:payments||[],devir:true,toplam});
+    const C=(id,ad,tel,sales)=>({id,ad,tel,sales});
+    const p=(tarih,tutar,sekil,not)=>({tarih,tutar,sekil,not:not||''});
+    const list=[
+      C('c1','Ayşe Yılmaz','0532 214 55 08',[
+        R('2026-01-12','Salon perdesi + tül',[it('Salon','Kadife fon perde (blackout)',320,270,2,4250),it('Salon','Tül estetik dikiş',320,270,1,2400)],[p('2026-01-12',4000,'nakit','peşinat'),p('2026-02-18',2500,'havale')]),
+        R('2026-02-15','Yatak Odası stor perde',[it('Yatak Odası','Zebra stor',180,200,2,1650)],[p('2026-02-15',1000,'nakit','peşinat')])
+      ]),
+      C('c2','Mehmet Demir','0533 187 42 19',[
+        D('2025-11-03',7800,[]),
+        D('2025-12-20',3200,[p('2026-01-15',3200,'nakit','kapandı')]),
+        R('2026-03-05','Mutfak + banyo perde',[it('Mutfak','Rustik keten',150,160,1,1900),it('Banyo','PVC stor',90,140,1,850)],[p('2026-03-05',750,'nakit','peşinat')])
+      ]),
+      C('c3','Fatma Kaya','0535 640 11 27',[
+        R('2026-06-10','Çocuk odası perde',[it('Çocuk Odası','Baskılı blackout',160,180,1,2200)],[p('2026-06-10',1500,'nakit','peşinat'),p('2026-06-28',1500,'havale','fazla ödeme')])
+      ]),
+      C('c4','Ali Kaya','0541 302 88 54',[
+        R('2026-05-20','Salon + yemek odası perde',[it('Salon','Keten fon perde',300,260,2,3100),it('Yemek Odası','Tül estetik',280,260,1,1800)],[p('2026-05-20',3000,'nakit','peşinat'),p('2026-06-15',2500,'havale'),p('2026-07-02',2500,'kart','bakiye kapandı')])
+      ]),
+      C('c5','Zeynep Şahin','0505 774 26 63',[
+        R('2026-06-25','Ofis stor perde',[it('Ofis','Screen stor',200,220,3,1450)],[p('2026-06-25',1350,'nakit','peşinat'),p('2026-07-08',1000,'kart')])
+      ]),
+      C('c6','Hüseyin Aydın','0532 918 05 41',[
+        D('2025-10-14',5600,[p('2026-01-20',1600,'nakit')]),
+        R('2026-02-08','Salon perde takımı',[it('Salon','Kadife blackout',340,280,2,3900)],[p('2026-02-08',2800,'nakit','peşinat')])
+      ]),
+      C('c7','Emine Arslan','0533 461 79 30',[
+        R('2026-05-11','Salon + mutfak',[it('Salon','Tül estetik',300,270,1,2600),it('Mutfak','Kafe perde',140,90,2,650)],[p('2026-05-11',1900,'nakit','peşinat')]),
+        R('2026-06-30','Yatak odası stor',[it('Yatak Odası','Blackout stor',170,190,2,1750)],[p('2026-07-11',1500,'havale','peşinat')])
+      ]),
+      C('c8','Mustafa Doğan','0535 208 63 15',[
+        R('2026-04-02','Salon perde + korniş',[it('Salon','Fon perde',360,290,2,3300),it('Salon','Korniş montaj',0,0,1,900)],[])
+      ])
+    ];
+    const sh=(id,ad,tel,toplam,paid,payDays,method,saleDays)=>{
+      const pays = paid>0 ? [p(this.before(payDays),paid,method||'nakit')] : [];
+      return C(id,ad,tel,[{id:'s'+(++sc),tarih:this.before(saleDays||180),aciklama:'Devir (eski defter)',items:[],payments:pays,devir:true,toplam}]);
+    };
+    const shallow=[
+      sh('c9','Kadir Öztürk','0532 611 09 74',3500,0,null,'nakit',120),
+      sh('c10','Hatice Kurt','0541 288 53 20',6200,6200,12,'havale',60),
+      sh('c11','İbrahim Şen','0533 745 18 66',2400,900,8,'nakit',20),
+      sh('c12','Elif Yıldız','0535 903 27 41',4800,1800,65,'nakit',150),
+      sh('c13','Osman Aksoy','0505 164 88 09',1500,1500,20,'kart',40),
+      sh('c14','Sevim Polat','0532 470 55 13',9200,3200,95,'havale',200),
+      sh('c15','Ramazan Erdoğan','0533 812 36 90',2800,800,5,'nakit',18),
+      sh('c16','Meryem Koç','0541 259 77 04',5400,5400,40,'havale',90),
+      sh('c17','Yusuf Aslan','0535 638 12 85',3100,3100,30,'nakit',70),
+      sh('c18','Şükran Taş','0505 391 60 27',7600,2600,140,'nakit',210),
+      sh('c19','Halil Güneş','0532 705 44 18',1900,700,3,'kart',16),
+      sh('c20','Nurten Bulut','0533 526 83 71',4300,1300,10,'havale',25),
+      sh('c21','Kemal Acar','0541 190 62 33',2600,2600,55,'nakit',95),
+      sh('c22','Gülsüm Ateş','0535 847 05 59',8100,8100,18,'havale',48),
+      sh('c23','Recep Kılıç','0505 233 71 46',3700,3700,22,'kart',52)
+    ];
+    return list.concat(shallow);
+  }
+
+  enrich(c){
+    let balance=0, lastPay=null, oldest=null;
+    const sales=c.sales.map(s=>{
+      const odenen=s.payments.reduce((a,x)=>a+x.tutar,0);
+      const kalan=s.toplam-odenen; balance+=kalan;
+      const dcol = kalan>0.5?'var(--danger)':(kalan<-0.5?'var(--warning)':'var(--success)');
+      const durum = kalan>0.5?'Açık':(kalan<-0.5?'Fazla':'Kapandı');
+      s.payments.forEach(x=>{ if(!lastPay||x.tarih>lastPay) lastPay=x.tarih; });
+      if(!oldest||s.tarih<oldest) oldest=s.tarih;
+      const expanded=this.state.expandedSaleId===s.id;
+      return {...s, odenen, kalan, expanded, caret:expanded?'ph-caret-down':'ph-caret-right',
+        toplamStr:this.fmtMoney(s.toplam), odenenStr:this.fmtMoney(odenen), kalanStr:this.fmtMoney(kalan),
+        tarihStr:this.fmtDate(s.tarih), dcol, durum,
+        hasItems:s.items.length>0, hasPayments:s.payments.length>0, noPayments:s.payments.length===0,
+        onToggle:()=>this.setState(st=>({expandedSaleId:st.expandedSaleId===s.id?null:s.id})),
+        onEdit:()=>this.showToast('Düzenleme ekranı bu prototipte hazır değil.'),
+        onDelete:()=>this.askDelete('“'+s.aciklama+'” satışı ve tüm tahsilat geçmişi silinecek.',()=>this.deleteSale(c.id,s.id)),
+        items:s.items.map(x=>({...x, enStr:x.en?x.en+' cm':'—', boyStr:x.boy?x.boy+' cm':'—', birimStr:this.fmtMoney(x.birim), tutarStr:this.fmtMoney(x.adet*x.birim)})),
+        payments:s.payments.map(x=>({...x, tutarStr:this.fmtMoney(x.tutar), tarihStr:this.fmtDate(x.tarih), sekilStr:this.methodLabel(x.sekil), notStr:x.not||'—'}))
+      };
+    });
+    const ref = lastPay || oldest;
+    const days = ref?this.daysAgo(ref):0;
+    let status,slabel;
+    if(balance<-0.5){status='eksi';slabel='Fazla Ödeme';}
+    else if(balance<0.5){status='temiz';slabel='Temiz';}
+    else if(days>=30){status='geciken';slabel='Geciken';}
+    else{status='borclu';slabel='Borçlu';}
+    const balCol = balance>0.5?'var(--danger)':(balance<-0.5?'var(--warning)':'var(--success)');
+    const payThisMonth = c.sales.reduce((a,s)=>a+s.payments.filter(x=>this.isThisMonth(x.tarih)).reduce((b,x)=>b+x.tutar,0),0);
+    return {id:c.id, ad:c.ad, tel:c.tel, sales, balance, balanceStr:this.fmtMoney(balance), balCol,
+      status, slabel, days, isEksi:status==='eksi', lastPayStr:lastPay?this.fmtDate(lastPay):'—',
+      gecikmeStr:days+' gün', payThisMonth, badgeStyle:this.badge(status)};
+  }
+  badge(status){
+    const base='display:inline-block;font-size:13px;font-weight:600;padding:3px 11px;border-radius:5px;';
+    if(status==='temiz')return base+'background:var(--success-soft);color:var(--success);';
+    if(status==='geciken')return base+'background:var(--danger-soft);color:var(--danger);';
+    if(status==='eksi')return base+'background:var(--warning-soft);color:var(--warning);';
+    return base+'background:color-mix(in srgb,var(--text) 8%,transparent);color:var(--text2);';
+  }
+  model(){ return this.state.customers.map(c=>this.enrich(c)); }
+  norm(s){ return String(s||'').toLocaleLowerCase('tr'); }
+
+  showToast(msg){ clearTimeout(this._t); this.setState({toast:msg}); this._t=setTimeout(()=>this.setState({toast:null}),3800); }
+  askDelete(msg,fn){ if(this.state.role!=='sahip'){return;} this.setState({confirm:{msg,onYes:fn}}); }
+  deleteSale(cid,sid){ this.setState(st=>({customers:st.customers.map(c=>c.id===cid?{...c,sales:c.sales.filter(s=>s.id!==sid)}:c)})); this.showToast('Satış silindi.'); }
+  deleteCustomer(id){ this.setState(st=>({customers:st.customers.filter(c=>c.id!==id),screen:'musteriler',selId:null})); this.showToast('Müşteri silindi.'); }
+
+  startTahsilat(cid,sid){ this.setState({screen:'tahsilat',t:{custId:cid||null,query:'',saleId:sid||null,amount:'',date:this.iso(this.TODAY),method:'nakit',note:''}}); }
+  startSatis(cid){ this.setState({screen:'yeniSatis',satis:{custId:cid||null,custQuery:'',desc:'',items:[this.newItem()]}}); }
+
+  saveSatis(){
+    const sa=this.state.satis;
+    if(!sa.custId){ this.showToast('Lütfen önce müşteri seçin.'); return; }
+    const total=sa.items.reduce((a,it)=>a+this.parseNum(it.adet)*this.parseNum(it.birim),0);
+    if(total<=0){ this.showToast('En az bir kalem ve birim fiyat girin.'); return; }
+    const items=sa.items.filter(it=>this.parseNum(it.birim)>0).map(it=>({oda:it.oda||'—',model:it.model||'—',en:this.parseNum(it.en),boy:this.parseNum(it.boy),adet:this.parseNum(it.adet)||1,birim:this.parseNum(it.birim)}));
+    const sid='ns'+Date.now();
+    const sale={id:sid,tarih:this.iso(this.TODAY),aciklama:sa.desc||'Perde satışı',items,payments:[],devir:false,toplam:total};
+    this.setState(st=>({customers:st.customers.map(c=>c.id===sa.custId?{...c,sales:[sale,...c.sales]}:c),
+      pesinat:{custId:sa.custId,saleId:sid,toplamStr:this.fmtMoney(total)}}));
+  }
+  pesinatYes(){ const pe=this.state.pesinat; this.setState({pesinat:null}); this.startTahsilat(pe.custId,pe.saleId); }
+  pesinatNo(){ const pe=this.state.pesinat; this.setState({pesinat:null,screen:'kart',selId:pe.custId}); this.showToast('Satış kaydedildi.'); }
+
+  tSave(){
+    const t=this.state.t; const amt=this.parseNum(t.amount);
+    if(!t.saleId){ this.showToast('Lütfen bir satış/hesap seçin.'); return; }
+    if(amt<=0){ this.showToast('Geçerli bir tutar girin.'); return; }
+    let newBal=0;
+    const customers=this.state.customers.map(c=>{
+      if(c.id!==t.custId) return c;
+      const sales=c.sales.map(s=>s.id===t.saleId?{...s,payments:[...s.payments,{tarih:t.date,tutar:amt,sekil:t.method,not:t.note}]}:s);
+      newBal=sales.reduce((a,s)=>a+(s.toplam-s.payments.reduce((b,x)=>b+x.tutar,0)),0);
+      return {...c,sales};
+    });
+    this.setState(st=>({customers,t:{...st.t,saleId:null,amount:'',note:''}}));
+    this.showToast('Tahsilat kaydedildi. Kalan bakiye: '+this.fmtMoney(newBal));
+  }
+
+  renderVals(){
+    const st=this.state, all=this.model();
+    const nav=(sc)=>()=>this.setState({screen:sc});
+    const isSahip=st.role==='sahip';
+    const navItems=[
+      {label:'Kontrol Paneli',icon:'ph-squares-four',active:st.screen==='panel',onClick:nav('panel')},
+      {label:'Müşteriler',icon:'ph-users-three',active:st.screen==='musteriler'||st.screen==='kart',onClick:nav('musteriler')},
+      {label:'Yeni Satış',icon:'ph-shopping-bag-open',active:st.screen==='yeniSatis',onClick:()=>this.startSatis()},
+      {label:'Raporlar',icon:'ph-chart-bar',active:st.screen==='raporlar',onClick:nav('raporlar')},
+      {label:'Ayarlar',icon:'ph-gear-six',active:st.screen==='ayarlar',onClick:nav('ayarlar')}
+    ];
+    const bugun=this.fmtDate(this.iso(this.TODAY));
+
+    const acik=all.filter(c=>c.balance>0.5).reduce((a,c)=>a+c.balance,0);
+    const geciken=all.filter(c=>c.status==='geciken');
+    const buAy=all.reduce((a,c)=>a+c.payThisMonth,0);
+    const kpi={acik:this.fmtMoney(acik),acikSub:all.filter(c=>c.balance>0.5).length+' müşteride açık hesap',
+      buAy:this.fmtMoney(buAy),buAySub:'Temmuz 2026 tahsilatları',
+      geciken:String(geciken.length),gecikenSub:'30+ gündür ödeme yok'};
+    const kirmizi=geciken.slice().sort((a,b)=>b.days-a.days).map(c=>({...c,onClick:()=>this.setState({screen:'kart',selId:c.id,expandedSaleId:null})}));
+
+    const chipDef=[{label:'Hepsi',val:'hepsi',count:all.length},
+      {label:'Borçlular',val:'borclular',count:all.filter(c=>c.balance>0.5).length},
+      {label:'Gecikenler',val:'gecikenler',count:geciken.length}];
+    const chips=chipDef.map(c=>{
+      const active=st.filter===c.val;
+      const style=(active?'background:var(--primary);color:#fff;border:1px solid var(--primary);':'background:var(--surface);color:var(--text);border:1px solid var(--border);')+'padding:9px 16px;border-radius:6px;font-size:15px;font-weight:500;cursor:pointer;';
+      return {...c,active,style,onClick:()=>this.setState({filter:c.val})};
+    });
+    const q=this.norm(st.search), qd=st.search.replace(/\D/g,'');
+    let mFiltered=all.filter(c=>{
+      if(st.filter==='borclular'&&!(c.balance>0.5))return false;
+      if(st.filter==='gecikenler'&&c.status!=='geciken')return false;
+      if(!st.search)return true;
+      return this.norm(c.ad).includes(q)||(qd&&c.tel.replace(/\D/g,'').includes(qd));
+    });
+    mFiltered=mFiltered.slice().sort((a,b)=>st.sortDir==='desc'?b.balance-a.balance:a.balance-b.balance)
+      .map(c=>({...c,onClick:()=>this.setState({screen:'kart',selId:c.id,expandedSaleId:null})}));
+
+    const card=st.selId?all.find(c=>c.id===st.selId):null;
+    const cardVM=card?{...card,
+      onSatis:()=>this.startSatis(card.id),
+      onTahsilat:()=>this.startTahsilat(card.id),
+      onEkstre:()=>this.showToast('Ekstre yazdırma görünümü hazırlanıyor…'),
+      onDelete:()=>this.askDelete(card.ad+' ve tüm hesap geçmişi kalıcı olarak silinecek.',()=>this.deleteCustomer(card.id))
+    }:null;
+
+    // Yeni Satış
+    const sa=st.satis;
+    const upd=(i,f)=>e=>{const v=e.target.value;this.setState(s=>({satis:{...s.satis,items:s.satis.items.map((it,idx)=>idx===i?{...it,[f]:v}:it)}}));};
+    const satisItems=sa.items.map((it,i)=>({...it,
+      tutarStr:this.fmtMoney(this.parseNum(it.adet)*this.parseNum(it.birim)),
+      onOda:upd(i,'oda'),onModel:upd(i,'model'),onEn:upd(i,'en'),onBoy:upd(i,'boy'),onAdet:upd(i,'adet'),onBirim:upd(i,'birim'),
+      onRemove:()=>this.setState(s=>({satis:{...s.satis,items:s.satis.items.length>1?s.satis.items.filter((_,idx)=>idx!==i):[this.newItem()]}}))}));
+    const satisTotal=sa.items.reduce((a,it)=>a+this.parseNum(it.adet)*this.parseNum(it.birim),0);
+    const sQ=this.norm(sa.custQuery), sQd=sa.custQuery.replace(/\D/g,'');
+    const sResults=sa.custQuery?all.filter(c=>this.norm(c.ad).includes(sQ)||(sQd&&c.tel.replace(/\D/g,'').includes(sQd))).slice(0,6)
+      .map(c=>({ad:c.ad,tel:c.tel,onPick:()=>this.setState(s=>({satis:{...s.satis,custId:c.id,custQuery:''}}))})):[];
+    const sCust=sa.custId?all.find(c=>c.id===sa.custId):null;
+    const satis={hasCust:!!sCust,noCust:!sCust,custName:sCust?sCust.ad:'',
+      query:sa.custQuery,onQuery:e=>{const v=e.target.value;this.setState(s=>({satis:{...s.satis,custQuery:v}}));},
+      results:sResults,hasResults:sResults.length>0,
+      showCreate:!!sa.custQuery && sResults.length===0,
+      onCreate:()=>{const id='nc'+Date.now();const ad=sa.custQuery.trim();this.setState(s=>({customers:[{id,ad,tel:'—',sales:[]},...s.customers],satis:{...s.satis,custId:id,custQuery:''}}));},
+      onChange:()=>this.setState(s=>({satis:{...s.satis,custId:null}})),
+      desc:sa.desc,onDesc:e=>{const v=e.target.value;this.setState(s=>({satis:{...s.satis,desc:v}}));},
+      items:satisItems,totalStr:this.fmtMoney(satisTotal),
+      onAdd:()=>this.setState(s=>({satis:{...s.satis,items:[...s.satis.items,this.newItem()]}})),
+      onCancel:()=>this.setState({screen:'panel'}),onSave:()=>this.saveSatis()};
+
+    // Tahsilat
+    const t=st.t;
+    const tQ=this.norm(t.query), tQd=t.query.replace(/\D/g,'');
+    const tResults=t.query?all.filter(c=>this.norm(c.ad).includes(tQ)||(tQd&&c.tel.replace(/\D/g,'').includes(tQd))).slice(0,6)
+      .map(c=>({ad:c.ad,tel:c.tel,balanceStr:c.balanceStr,balCol:c.balCol,onPick:()=>this.setState(s=>({t:{...s.t,custId:c.id,query:'',saleId:null}}))})):[];
+    const tCust=t.custId?all.find(c=>c.id===t.custId):null;
+    const openSales=tCust?tCust.sales.filter(s=>s.kalan>0.5).map(s=>{
+      const sel=t.saleId===s.id;
+      return {aciklama:s.aciklama,tarihStr:s.tarihStr,kalanStr:s.kalanStr,
+        radio:sel?'ph-radio-button':'ph-circle',radioCol:sel?'var(--primary)':'var(--text2)',
+        rowStyle:'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:8px;cursor:pointer;border:1px solid '+(sel?'var(--primary)':'var(--border)')+';background:'+(sel?'var(--primary-soft)':'var(--surface)')+';',
+        onPick:()=>this.setState(s2=>({t:{...s2.t,saleId:s.id}}))};
+    }):[];
+    const methods=['nakit','kart','havale'].map(m=>{
+      const active=t.method===m;
+      return {label:this.methodLabel(m),
+        style:(active?'background:var(--primary);color:#fff;border:1px solid var(--primary);':'background:var(--surface);color:var(--text);border:1px solid var(--border);')+'flex:1;padding:12px;border-radius:6px;font-size:15px;font-weight:500;cursor:pointer;',
+        onPick:()=>this.setState(s=>({t:{...s.t,method:m}}))};
+    });
+    const tVM={noCust:!tCust,hasCust:!!tCust,
+      query:t.query,onQuery:e=>{const v=e.target.value;this.setState(s=>({t:{...s.t,query:v}}));},
+      results:tResults,hasResults:tResults.length>0,
+      custName:tCust?tCust.ad:'',custTel:tCust?tCust.tel:'',custBalStr:tCust?tCust.balanceStr:'',custBalCol:tCust?tCust.balCol:'var(--text)',
+      onChange:()=>this.setState(s=>({t:{...s.t,custId:null,saleId:null}})),
+      openSales,hasOpen:openSales.length>0,noOpen:!!tCust&&openSales.length===0,
+      saleSelected:!!t.saleId,
+      amount:t.amount,onAmount:e=>{const v=e.target.value;this.setState(s=>({t:{...s.t,amount:v}}));},
+      onKey:e=>{if(e.key==='Enter')this.tSave();},
+      date:t.date,onDate:e=>{const v=e.target.value;this.setState(s=>({t:{...s.t,date:v}}));},
+      methods,note:t.note,onNote:e=>{const v=e.target.value;this.setState(s=>({t:{...s.t,note:v}}));},
+      onSave:()=>this.tSave()};
+
+    const raporlar=[
+      {ad:'Açık Bakiye',icon:'ph-scroll',desc:'Borcu olan tüm müşteriler ve kalan bakiyeleri.'},
+      {ad:'Tahsilat (Kasa)',icon:'ph-coins',desc:'Seçili tarih aralığında girilen tüm tahsilatlar.'},
+      {ad:'Geciken Hesaplar',icon:'ph-clock-countdown',desc:'30+ gündür ödemesi olmayan hesaplar.'},
+      {ad:'Müşteri Ekstresi',icon:'ph-user-list',desc:'Tek müşterinin tüm hareket dökümü (A4 çıktı).'}
+    ].map(r=>({...r,onPrint:()=>this.showToast(r.ad+' — yazdırma görünümü hazırlanıyor…'),onExcel:()=>this.showToast(r.ad+' — Excel dosyası oluşturuluyor…')}));
+
+    const rbtn=(active)=>(active?'background:var(--primary);color:#fff;border:1px solid var(--primary);':'background:var(--surface);color:var(--text);border:1px solid var(--border);')+'padding:11px 20px;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;';
+
+    return {
+      rootRef:this.rootRef, theme:st.theme, dukkan:st.dukkan, navItems, isSahip,
+      themeIcon:st.theme==='light'?'ph-moon':'ph-sun', themeLabel:st.theme==='light'?'Koyu Tema':'Açık Tema',
+      userName:isSahip?'Necati Işık':'Mehmet Tezgahtar', roleLabel:isSahip?'Dükkan Sahibi':'Çalışan',
+      toggleTheme:()=>this.setState(s=>({theme:s.theme==='light'?'dark':'light'})),
+      toggleRole:()=>this.setState(s=>({role:s.role==='sahip'?'calisan':'sahip'})),
+      isPanel:st.screen==='panel',isMusteriler:st.screen==='musteriler',isKart:st.screen==='kart',
+      isYeniSatis:st.screen==='yeniSatis',isTahsilat:st.screen==='tahsilat',isRaporlar:st.screen==='raporlar',isAyarlar:st.screen==='ayarlar',
+      bugunStr:bugun, onTahsilat:()=>this.startTahsilat(), onYeniSatis:()=>this.startSatis(),
+      onYedek:()=>{this.setState({sonYedek:bugun});this.showToast('Yedek alındı. Son yedek: '+bugun);},
+      onGeriYukle:()=>this.showToast('Geri yükleme için yedek dosyası seçin (prototip).'),
+      kpi, backupWarn:true, kirmizi,
+      search:st.search, onSearch:e=>{const v=e.target.value;this.setState({search:v});},
+      chips, mFiltered, mEmpty:mFiltered.length===0,
+      sortArrow:st.sortDir==='desc'?'▼':'▲', onSortBakiye:()=>this.setState(s=>({sortDir:s.sortDir==='desc'?'asc':'desc'})),
+      onYeniMusteri:()=>this.startSatis(),
+      onBack:()=>this.setState({screen:'musteriler'}),
+      card:cardVM, satis, t:tVM, raporlar,
+      onDukkan:e=>{const v=e.target.value;this.setState({dukkan:v});},
+      onSetSahip:()=>this.setState({role:'sahip'}), onSetCalisan:()=>this.setState({role:'calisan'}),
+      roleSahipStyle:rbtn(isSahip), roleCalisanStyle:rbtn(!isSahip),
+      onLight:()=>this.setState({theme:'light'}), onDark:()=>this.setState({theme:'dark'}),
+      lightStyle:rbtn(st.theme==='light'), darkStyle:rbtn(st.theme==='dark'),
+      sonYedek:st.sonYedek,
+      toast:st.toast, confirm:st.confirm,
+      onConfirmYes:()=>{const c=st.confirm;this.setState({confirm:null});c&&c.onYes&&c.onYes();},
+      onConfirmNo:()=>this.setState({confirm:null}),
+      pesinat:st.pesinat, onPesinatYes:()=>this.pesinatYes(), onPesinatNo:()=>this.pesinatNo()
+    };
+  }
+}
+</script>
+</body>
+</html>

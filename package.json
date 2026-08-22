@@ -1,0 +1,54 @@
+{
+  "name": "veresiye",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Veresiye — küçük işletmeler için açık hesap (cari) takip defteri; masaüstü, tamamen çevrimdışı",
+  "author": "Veresiye",
+  "main": "./out/main/main.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "postinstall": "electron-builder install-app-deps",
+    "db:smoke": "cross-env ELECTRON_RUN_AS_NODE=1 electron ./scripts/db-smoke.mjs",
+    "db:test": "esbuild scripts/db-test.ts --bundle --platform=node --format=cjs --external:better-sqlite3 --external:electron --outfile=.tmp/db-test.cjs && cross-env ELECTRON_RUN_AS_NODE=1 electron .tmp/db-test.cjs",
+    "db:seed": "esbuild scripts/seed-ornek-veri.ts --bundle --platform=node --format=cjs --external:better-sqlite3 --external:electron --outfile=.tmp/db-seed.cjs && cross-env ELECTRON_RUN_AS_NODE=1 electron .tmp/db-seed.cjs",
+    "backend:test": "esbuild scripts/backend-test.ts --bundle --platform=node --format=cjs --external:better-sqlite3 --external:electron --outfile=.tmp/backend-test.cjs && cross-env ELECTRON_RUN_AS_NODE=1 electron .tmp/backend-test.cjs",
+    "rapor:test": "esbuild scripts/rapor-test.ts --bundle --platform=node --format=cjs --external:better-sqlite3 --external:electron --external:exceljs --outfile=.tmp/rapor-test.cjs && cross-env ELECTRON_RUN_AS_NODE=1 electron .tmp/rapor-test.cjs",
+    "yedek:test": "esbuild scripts/yedek-test.ts --bundle --platform=node --format=cjs --external:better-sqlite3 --external:electron --outfile=.tmp/yedek-test.cjs && cross-env ELECTRON_RUN_AS_NODE=1 electron .tmp/yedek-test.cjs",
+    "dist": "electron-vite build && electron-builder --win --publish never",
+    "migration:test": "esbuild scripts/migration-004-testi.ts --bundle --platform=node --format=cjs --external:better-sqlite3 --external:electron --outfile=.tmp/migration-test.cjs && cross-env ELECTRON_RUN_AS_NODE=1 electron .tmp/migration-test.cjs"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.11.1",
+    "exceljs": "^4.4.0"
+  },
+  "devDependencies": {
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@fontsource/ibm-plex-sans": "^5.2.8",
+    "@phosphor-icons/web": "^2.1.2",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.2.0",
+    "cross-env": "^10.1.0",
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
+    "esbuild": "^0.25.12",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "typescript": "^7.0.2",
+    "vite": "^7.3.6"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true,
+    "electron-winstaller@5.4.0": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.1": true,
+    "fsevents@2.3.3": true
+  }
+}

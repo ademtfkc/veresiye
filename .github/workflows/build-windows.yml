@@ -1,0 +1,82 @@
+name: Windows .exe Derleme
+
+# Neden bu iş akışı var: better-sqlite3 bir native (derlenmiş) modül; geliştirme
+# macOS'ta yapılıyor ama teslim Windows .exe olacak. Native modüller derlendiği
+# işletim sistemine özeldir, bu yüzden gerçek Windows .exe'yi üretmek için
+# GERÇEK bir Windows makinesi (burada: GitHub'ın ücretsiz Windows runner'ı)
+# gerekiyor. (bkz. dokumanlar/MIMARI.md Böl.9)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+    # Yalnızca belge/görsel değişen push'lar gereksiz yere Windows derlemesi
+    # başlatmasın (derleme ~6 dk sürüyor). Kod değişince normal tetiklenir.
+    paths-ignore:
+      - '**.md'
+      - 'dokumanlar/**'
+      - 'tasarim/**'
+      - 'LICENSE'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    # Yerleşik GITHUB_TOKEN'ın "Release" (sürüm) oluşturmasına izin ver — .exe'yi
+    # kalıcı, tek tıkla indirilen bir sayfaya koymak için (electron-builder'ın kendi
+    # yayınlama denemesi değil; ayrı ve güvenli).
+    permissions:
+      contents: write
+
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Bağımlılıkları kur (better-sqlite3 bu adımda Windows için derlenir)
+        run: npm ci
+
+      - name: Windows .exe üret (electron-builder)
+        run: npm run dist
+
+      - name: Kurulum dosyasını yükle (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: veresiye-windows-exe
+          path: release/*.exe
+          if-no-files-found: error
+
+      - name: Sürüm (Release) yayınla — .exe için kalıcı indirme linki
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: Veresiye — Windows Kurulum (v1.0.0)
+          body: |
+            **Veresiye — Cari Hesap Defteri.** Küçük işletmeler için satış ve açık hesap
+            (veresiye) takip defteri. Windows'a kurulur, internet gerektirmez.
+
+            Aşağıdaki **`Veresiye.Setup.1.0.0.exe`** dosyasını indirin ve çift tıklayın.
+            Program imzalı sertifika taşımadığı için Windows "Bilgisayarınızı korudu" uyarısı
+            gösterebilir → **Daha fazla bilgi → Yine de çalıştır**.
+
+            **Neler var:**
+            - Müşteri, satış ve tahsilat takibi; kalan bakiye her zaman canlı hesaplanır.
+            - Çok kalemli satış satırları (oda / model / en / boy / adet) ve elle satır tutarı.
+            - Toptan / indirimli fiyat: satır tutarları boş bırakılıp toplam elle yazılabilir.
+            - Eski defter aktarımı (Devir) ve müşteriye açılış bakiyesi.
+            - Kırmızı liste: 30+ gündür ödemesi olmayan borçlular.
+            - 4 rapor (Açık Bakiye, Kasa, Geciken Hesaplar, Müşteri Ekstresi) + A4/A3 yazdırma,
+              CSV/Excel dışa aktarma, çıktılarda dükkan logosu.
+            - Oda ve model/kumaş kutularında otomatik öneri.
+            - Yedekleme: her akşam 23.55 + her açılışta otomatik, bilgisayarda son 5 yedek,
+              tek tıkla USB'ye yedek, doğrulamalı geri yükleme.
+            - İki rol: Dükkan Sahibi ve Çalışan. Şifreler `bcrypt` ile saklanır.
+            - Tamamen çevrimdışı — hiçbir dış servise bağlanmaz, veri tek bir yerel dosyada.
+          files: release/*.exe
+          fail_on_unmatched_files: true

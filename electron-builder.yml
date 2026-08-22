@@ -1,0 +1,35 @@
+# electron-builder yapılandırması — Windows .exe paketleme (NSIS kurulum sihirbazı).
+# Gerçek .exe üretimi Faz 8'de (Windows'ta) yapılacak; bu Faz 0'da sadece
+# ayarların hazır olmasını sağlar (bkz. dokumanlar/MIMARI.md Böl.9).
+
+appId: com.veresiye.carihesap
+productName: Veresiye
+
+directories:
+  output: release
+
+# better-sqlite3'ün derlenmiş (.node) dosyası asar arşivinin İÇİNDEN
+# çalıştırılamaz (native modüller dlopen ile açılır); bu yüzden paket
+# dışına, "unpacked" olarak çıkarılmalı.
+asarUnpack:
+  - '**/*.node'
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Veresiye
+
+# NOT: Otomatik güncelleme/lisans mekanizması BİLİNÇLİ olarak YOK
+# (dokumanlar/MIMARI.md Böl.11 karar kaydı — "bozulabilecek mekanizma olmasın").
+# NOT: Özel uygulama ikonu (win.icon) henüz yok; tasarım/ikon Faz 4+'ta eklenince
+# buraya `build/icon.ico` yolu tanımlanacak. Şimdilik electron-builder'ın
+# varsayılan ikonu kullanılır.

@@ -1,0 +1,46 @@
+/**
+ * TASARIM TOKEN'LARI (tek kaynak)
+ *
+ * Kaynak: tasarim/Perde Takip.dc.html (onaylı görsel tasarım).
+ * Renk/boşluk/köşe değerleri BURADAN taşınır — koda gömülü keyfi renk/boşluk
+ * eklenmez. Bu dosya değişirse tüm uygulama tek yerden güncellenir.
+ */
+
+:root {
+  /* Renkler — açık tema */
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --border: #DED8CC;
+  --text: #1C2B33;
+  --text2: #5C6B73;
+  --primary: #1C4E5A;
+  --accent: #8A6A2F;
+  --danger: #A3231B;
+  --success: #1E6B4F;
+  --warning: #B87503;
+
+  /* Ölçüler */
+  --radius: 8px;
+  --row-h: 52px;
+  --sidebar-w: 260px;
+  --base-fs: 16px;
+
+  /* Yumuşak (soft) yüzeyler — vurgu rengi %10-15 opaklıkla zemine karışır */
+  --primary-soft: color-mix(in srgb, var(--primary) 10%, transparent);
+  --danger-soft: color-mix(in srgb, var(--danger) 9%, transparent);
+  --success-soft: color-mix(in srgb, var(--success) 12%, transparent);
+  --warning-soft: color-mix(in srgb, var(--warning) 15%, transparent);
+}
+
+[data-theme='dark'] {
+  --bg: #14191C;
+  --surface: #1C2327;
+  --border: #2C363B;
+  --text: #E7ECEE;
+  --text2: #9BA8AE;
+  --primary: #4E9DAE;
+  --accent: #C79A4A;
+  --danger: #E27167;
+  --success: #54B991;
+  --warning: #E0A83C;
+}
